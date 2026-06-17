@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAI DeepFake Detection</title>
+    <!-- Fonts: Inter & Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <!-- Background Animated Particles / Gradients -->
+    <div class="bg-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>NexusAI</span>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-target="dashboard">
+                    <i class="fa-solid fa-border-all"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-target="history">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Prediction History</span>
+                </li>
+                <li class="nav-item" data-target="analytics">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analytics</span>
+                </li>
+                <li class="nav-item" data-target="model-info">
+                    <i class="fa-solid fa-microchip"></i>
+                    <span>Model Info</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="model-status-card" id="sidebar-health">
+                    <div class="status-indicator active"></div>
+                    <div class="status-text">
+                        <span class="status-title">System Health</span>
+                        <span class="status-val">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- SECTION: DASHBOARD -->
+            <section id="dashboard" class="page-section active">
+                <header class="section-header">
+                    <h1>AI Image Forensics</h1>
+                    <p>Detect deepfakes and AI-generated media with state-of-the-art vision models.</p>
+                </header>
+
+                <div class="stats-row">
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Images Scanned</span>
+                            <span class="stat-value" id="stat-scanned">1,482</span>
+                            <span class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> 12.4%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon"><i class="fa-solid fa-robot"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">AI Detections</span>
+                            <span class="stat-value" id="stat-fakes">439</span>
+                            <span class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> 5.1%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Avg Inference Time</span>
+                            <span class="stat-value">120ms</span>
+                            <span class="stat-trend down"><i class="fa-solid fa-arrow-trend-down"></i> 2.3%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Upload Zone -->
+                    <div class="upload-container glass-panel">
+                        <h2>Analyze Media</h2>
+                        <form id="upload-form" enctype="multipart/form-data">
+                            <div class="drop-zone" id="drop-zone">
+                                <div class="drop-zone-content">
+                                    <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                                    <h3>Drag & Drop image here</h3>
+                                    <p>or click to browse from your computer</p>
+                                    <span class="file-formats">Supported: JPG, PNG, WEBP</span>
+                                </div>
+                                <input type="file" name="image" id="file-input" accept="image/*" required>
+                            </div>
+                            <!-- Image Preview inside the drop zone -->
+                            <div class="preview-container hidden" id="preview-container">
+                                <img id="image-preview" src="" alt="Preview">
+                                <button type="button" class="btn-secondary" id="clear-btn"><i class="fa-solid fa-xmark"></i> Clear</button>
+                            </div>
+                            <button type="submit" class="btn-primary" id="predict-btn" disabled>
+                                <i class="fa-solid fa-microchip"></i> Run Analysis
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Result Card -->
+                    <div class="result-container glass-panel hidden" id="result-card">
+                        <div class="result-header">
+                            <h2>Inference Report</h2>
+                            <span class="badge" id="inference-time">Latency: --</span>
+                        </div>
+                        
+                        <div class="result-status" id="result-status">
+                            <!-- Injected by JS: Real/Fake Glow Badge -->
+                        </div>
+
+                        <div class="confidence-meter">
+                            <div class="meter-labels">
+                                <span>Authentic</span>
+                                <span>AI-Generated</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="confidence-fill" style="width: 50%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="probability-details">
+                            <div class="prob-box">
+                                <span>Authentic Score</span>
+                                <h3 id="prob-real">--%</h3>
+                            </div>
+                            <div class="prob-box">
+                                <span>AI Score</span>
+                                <h3 id="prob-fake">--%</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Overlay -->
+                <div class="loading-overlay hidden" id="loading-overlay">
+                    <div class="loading-content glass-panel">
+                        <div class="scanner"></div>
+                        <h3 id="loading-text">Analyzing image...</h3>
+                        <p id="loading-subtext">Initializing neural network tensors</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: HISTORY -->
+            <section id="history" class="page-section">
+                <header class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h1>Prediction History</h1>
+                        <p>Review recent scans and model inferences stored locally in your session.</p>
+                    </div>
+                    <button id="clear-history-btn" class="btn-secondary" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #EF4444; padding: 10px 16px;">
+                        <i class="fa-solid fa-trash-can"></i> Clear History
+                    </button>
+                </header>
+                
+                <div class="glass-panel table-container">
+                    <table class="modern-table" id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Image Name</th>
+                                <th>Classification</th>
+                                <th>Confidence</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body">
+                            <!-- Injected by JS -->
+                            <tr class="empty-row"><td colspan="5">No history found for this session.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION: ANALYTICS -->
+            <section id="analytics" class="page-section">
+                <header class="section-header">
+                    <h1>Analytics Dashboard</h1>
+                    <p>Aggregate insights on analyzed media (Mock Data).</p>
+                </header>
+                
+                <div class="analytics-grid">
+                    <div class="chart-container glass-panel">
+                        <h3>Scans Over Time</h3>
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                    <div class="chart-container glass-panel">
+                        <h3>Real vs Fake Distribution</h3>
+                        <div class="pie-wrapper">
+                            <canvas id="doughnutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: MODEL INFO -->
+            <section id="model-info" class="page-section">
+                <header class="section-header">
+                    <h1>Model Specifications</h1>
+                    <p>Architecture and performance details of the active DeepFake detection model.</p>
+                </header>
+
+                <div class="model-info-grid">
+                    <div class="glass-panel architecture-card">
+                        <h2><i class="fa-solid fa-network-wired"></i> Architecture</h2>
+                        <ul class="tech-specs">
+                            <li><strong>Base Model:</strong> ResNet-50 / EfficientNet</li>
+                            <li><strong>Input Resolution:</strong> 224x224 RGB</li>
+                            <li><strong>Framework:</strong> PyTorch 2.x</li>
+                            <li><strong>Optimization:</strong> AdamW, CrossEntropyLoss</li>
+                        </ul>
+                    </div>
+                    <div class="glass-panel performance-card">
+                        <h2><i class="fa-solid fa-chart-simple"></i> Validation Metrics</h2>
+                        <div class="metrics-grid">
+                            <div class="metric">
+                                <span class="m-label">Accuracy</span>
+                                <span class="m-val">94.2%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="m-label">Precision</span>
+                                <span class="m-val">93.8%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="m-label">Recall</span>
+                                <span class="m-val">95.1%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="m-label">F1-Score</span>
+                                <span class="m-val">94.4%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
