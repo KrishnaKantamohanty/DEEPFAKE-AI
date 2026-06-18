@@ -69,7 +69,10 @@ def run_prediction():
             details = predict_details(filepath, model_path=MODEL_PATH)
             
             # Clean up the file
-            os.remove(filepath)
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
             
             return jsonify({
                 'success': True,
@@ -82,8 +85,11 @@ def run_prediction():
             
         except Exception as e:
             # Clean up if file exists
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            except OSError:
+                pass
             return jsonify({'error': str(e)}), 500
             
     return jsonify({'error': 'Unsupported file type. Use JPG, PNG, WEBP, or BMP.'}), 400

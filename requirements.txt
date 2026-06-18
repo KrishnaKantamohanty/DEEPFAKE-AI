@@ -11,3 +11,4 @@ werkzeug>=2.0.0
 kaggle>=2.2.0
 flask-cors>=3.0.10
 datasets>=2.14.0
+gunicorn>=21.2.0

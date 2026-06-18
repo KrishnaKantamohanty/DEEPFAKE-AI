@@ -34,6 +34,9 @@ def preprocess_image(image_path):
     
     return image_tensor
 
+# Global model cache to avoid reloading on every request
+_model_cache = {}
+
 def predict_details(image_path, model_path='best_model.pth'):
     """
     Loads model checkpoint, runs prediction on the image,
@@ -41,16 +44,20 @@ def predict_details(image_path, model_path='best_model.pth'):
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    # Instantiate the model topology without downloading ImageNet weights.
-    # The trained checkpoint fully defines the inference weights.
-    model = get_model(fine_tune=False, device=device, pretrained=False)
-    
-    # Load trained model checkpoint weights
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Trained model checkpoint '{model_path}' not found. Please train the model first.")
+    if model_path not in _model_cache:
+        # Instantiate the model topology without downloading ImageNet weights.
+        # The trained checkpoint fully defines the inference weights.
+        model = get_model(fine_tune=False, device=device, pretrained=False)
         
-    model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
-    model.eval() # Set model to evaluation mode (deactivates Dropout/BatchNorm update)
+        # Load trained model checkpoint weights
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Trained model checkpoint '{model_path}' not found. Please train the model first.")
+            
+        model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
+        model.eval() # Set model to evaluation mode (deactivates Dropout/BatchNorm update)
+        _model_cache[model_path] = model
+    
+    model = _model_cache[model_path]
 
     # Preprocess image
     image_tensor = preprocess_image(image_path).to(device)
